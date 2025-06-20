@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Střídání kurýrů – přihlášení</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+    .login-container, .app-container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input { display: block; width: 100%; padding: 10px; margin: 10px 0; border-radius: 4px; border: 1px solid #ccc; }
+    button { padding: 10px; width: 100%; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    .tabs, .container { display: none; }
+    .tabs.active, .container.active { display: block; }
+    .circle-entry { display: flex; align-items: center; margin-bottom: 5px; }
+    .circle-entry label { flex: 1; }
+    .circle-entry input { flex: 1; }
+    .logout-btn { margin-top: 10px; background-color: #d9534f; }
+    .logout-btn:hover { background-color: #c9302c; }
+  </style>
+</head>
+<body>
+
+<div id="login" class="login-container">
+  <h2>Přihlášení</h2>
+  <input type="text" id="username" placeholder="Uživatelské jméno">
+  <input type="password" id="password" placeholder="Heslo">
+  <button onclick="login()">Přihlásit se</button>
+  <p id="login-error" style="color: red; display: none;">Nesprávné přihlašovací údaje.</p>
+</div>
+
+<div id="app" class="app-container" style="display:none">
+  <p id="userInfo"></p>
+  <button class="logout-btn" onclick="logout()">Odhlásit se</button>
+  <div class="tabs">
+    <div class="tab" onclick="showTab('shift')">Střídání</div>
+    <div class="tab" onclick="showTab('invoice')">Fakturace</div>
+    <div class="tab" onclick="showTab('daily')">Denní průběh</div>
+    <div class="tab" id="tabCouriers" onclick="showTab('couriers')">Kurýři</div>
+    <div class="tab" id="tabVehicles" onclick="showTab('vehicles')">Auta</div>
+  </div>
+
+  <div id="shift" class="container">
+    <h1>Střídání (zatím skryto)</h1>
+  </div>
+
+  <div id="invoice" class="container">
+    <h1>Fakturace</h1>
+    <pre id="invoiceOutput"></pre>
+  </div>
+
+  <div id="daily" class="container">
+    <h1>Denní průběh kurýra</h1>
+    <form id="dailyForm">
+      <div class="circle-entry"><label for="circle1">1. kolečko – počet zakázek:</label><input type="number" id="circle1"></div>
+      <div class="circle-entry"><label for="circle2">2. kolečko – počet zakázek:</label><input type="number" id="circle2"></div>
+      <div class="circle-entry"><label for="circle3">3. kolečko – počet zakázek:</label><input type="number" id="circle3"></div>
+      <div class="circle-entry"><label for="circle4">4. kolečko – počet zakázek:</label><input type="number" id="circle4"></div>
+      <div class="circle-entry"><label for="circle5">5. kolečko – počet zakázek:</label><input type="number" id="circle5"></div>
+      <div class="circle-entry"><label for="circle6">6. kolečko – počet zakázek:</label><input type="number" id="circle6"></div>
+      <div class="circle-entry"><label for="circle7">7. kolečko – počet zakázek:</label><input type="number" id="circle7"></div>
+      <div class="circle-entry"><label for="circle8">8. kolečko – počet zakázek:</label><input type="number" id="circle8"></div>
+      <div class="circle-entry"><label for="circle9">9. kolečko – počet zakázek:</label><input type="number" id="circle9"></div>
+      <button type="button" onclick="submitDaily()">Uložit průběh</button>
+    </form>
+    <p id="dailyResult"></p>
+  </div>
+
+  <div id="couriers" class="container">
+    <h1>Kurýři</h1>
+    <p>(obsah zde bude zobrazen pro administrátory)</p>
+  </div>
+
+  <div id="vehicles" class="container">
+    <h1>Auta</h1>
+    <p>(obsah zde bude zobrazen pro administrátory)</p>
+  </div>
+</div>
+
+<script>
+const users = {
+  'tomas': { password: '1234', role: 'kuryr', name: 'Tomáš Beránek', id: '5794', email: 'tomas@automotiveservices.cz', phone: '776390948', pricelist: 'kolecka' },
+  'lukas': { password: '1234', role: 'kuryr', name: 'Lukáš Korec', id: '5323', email: 'lukas@automotiveservices.cz', phone: '774096144', pricelist: 'zakazky' },
+  'admin': { password: 'admin123', role: 'admin', name: 'Admin' }
+};
+
+let currentUser = null;
+
+function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  if (users[username] && users[username].password === password) {
+    currentUser = users[username];
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('userInfo').innerText = `Přihlášen jako: ${currentUser.name} (ID: ${currentUser.id})`;
+    document.querySelector('.tabs').classList.add('active');
+    showTab('shift');
+
+    if (currentUser.role !== 'admin') {
+      document.getElementById('tabCouriers').style.display = 'none';
+      document.getElementById('tabVehicles').style.display = 'none';
+    }
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login').style.display = 'block';
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  document.getElementById('userInfo').innerText = '';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('invoiceOutput').innerText = '';
+  document.getElementById('dailyResult').innerText = '';
+  document.getElementById('dailyForm').reset();
+}
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.tab[onclick*="${id}"]`).classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+function submitDaily() {
+  const now = new Date().toLocaleDateString('cs-CZ');
+  let summary = `Denní souhrn pro ${currentUser.name} (${now}):\n`;
+  let total = 0;
+
+  for (let i = 1; i <= 9; i++) {
+    const val = parseInt(document.getElementById(`circle${i}`).value);
+    if (!isNaN(val) && val > 0) {
+      summary += `${i}. kolečko: ${val} zakázek\n`;
+      if (currentUser.pricelist === 'kolecka') {
+        if (val >= 10) total += 700;
+        else total += val * 50;
+      } else if (currentUser.pricelist === 'zakazky') {
+        total += val * 60 + val * (3 + 2 + 2);
+      }
+    }
+  }
+
+  summary += `\nOdhadovaný základ pro fakturaci: ${total.toFixed(2)} Kč`;
+  document.getElementById('dailyResult').innerText = summary;
+  document.getElementById('invoiceOutput').innerText = summary;
+}
+</script>
+
+</body>
+</html>
